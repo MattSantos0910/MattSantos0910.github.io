@@ -226,14 +226,10 @@ function drawRobot() {
   if (player.facingRight) {
     ctx.drawImage(
       halleImage,
-      spriteX,
-      spriteY,
-      spriteWidth,
-      spriteHeight,
       player.x - hitDx,
       player.y - hitDy,
       player.width,
-      player.height
+      player.height,
     );
   } else {
     //for running to the left you mirror the image
@@ -241,14 +237,10 @@ function drawRobot() {
     ctx.scale(-1, 1); //mirror the entire canvas
     ctx.drawImage(
       halleImage,
-      spriteX,
-      spriteY,
-      spriteWidth,
-      spriteHeight,
       -player.x - player.width + hitDx,
       player.y - hitDy,
       player.width,
-      player.height
+      player.height,
     );
     ctx.restore(); //put the canvas back to normal
   }
@@ -270,7 +262,7 @@ function collision() {
         platforms[i].x,
         platforms[i].y,
         platforms[i].width,
-        platforms[i].height
+        platforms[i].height,
       );
     }
   }
@@ -393,27 +385,64 @@ function deathOfPlayer() {
     canvas.width / 4,
     canvas.height / 6,
     canvas.width / 2,
-    canvas.height / 2
+    canvas.height / 2,
   );
+  drawFireAnimation(canvas.width / 2, canvas.height / 2, 110, 150);
   ctx.fillStyle = "black";
   ctx.font = "800% serif";
   ctx.fillText(
     "You are dead",
     canvas.width / 4,
     canvas.height / 6 + canvas.height / 5,
-    (canvas.width / 16) * 14
+    (canvas.width / 16) * 14,
   );
   ctx.font = "500% serif";
   ctx.fillText(
     "Hit any key to restart",
     canvas.width / 4,
     canvas.height / 6 + canvas.height / 3,
-    (canvas.width / 16) * 14
+    (canvas.width / 16) * 14,
   );
   if (keyPress.any) {
     keyPress.any = false;
     window.location.reload();
   }
+}
+
+function drawFireAnimation(x, y, width, height) {
+  var pulse = Math.floor(Date.now() / 120) % 3;
+  var flameWidth = width / 5;
+  var flameHeight = height / 4 + pulse * 8;
+
+  ctx.fillStyle = "#9e2417";
+  ctx.fillRect(x - width / 2, y + height / 2 - flameHeight, width, flameHeight);
+  ctx.fillStyle = "#ed4b16";
+  ctx.fillRect(
+    x - width / 2 + flameWidth,
+    y + height / 2 - flameHeight - 12,
+    flameWidth * 3,
+    flameHeight,
+  );
+  ctx.fillStyle = "#ff9d1c";
+  ctx.fillRect(
+    x - width / 2 + flameWidth * 2,
+    y + height / 2 - flameHeight + 12,
+    flameWidth * 2,
+    flameHeight - 16,
+  );
+  ctx.fillStyle = "#ffe36b";
+  ctx.fillRect(
+    x - flameWidth / 2,
+    y + height / 2 - flameHeight / 2,
+    flameWidth,
+    flameHeight / 2,
+  );
+  ctx.fillRect(
+    x + flameWidth * 1.5,
+    y + height / 2 - flameHeight / 2 - pulse * 8,
+    flameWidth,
+    flameHeight / 2,
+  );
 }
 
 function playerFrictionAndGravity() {
@@ -509,7 +538,7 @@ function makeGrid() {
     ctx.fillText(
       i, // text
       i - 15, // x location
-      25 // y location
+      25, // y location
     );
   }
 
@@ -523,7 +552,7 @@ function makeGrid() {
     ctx.fillText(
       i, // text
       10, // x location
-      i + 5 // y location
+      i + 5, // y location
     );
   }
   gridMade = true;
@@ -531,15 +560,64 @@ function makeGrid() {
 
 function drawProjectiles() {
   for (var i = 0; i < projectiles.length; i++) {
-    ctx.drawImage(
-      projectileImage,
-      projectiles[i].x,
-      projectiles[i].y,
-      projectiles[i].width,
-      projectiles[i].height
-    );
+    drawFireball(projectiles[i]);
     projectiles[i].x = projectiles[i].x + projectiles[i].speedX;
     projectiles[i].y = projectiles[i].y + projectiles[i].speedY;
+  }
+}
+
+function drawFireball(projectile) {
+  var pulse = Math.floor(Date.now() / 90) % 2;
+  var centerX = projectile.x + projectile.width / 2;
+  var centerY = projectile.y + projectile.height / 2;
+  var radius = Math.max(projectile.width, projectile.height) / 2;
+
+  ctx.fillStyle = "#8f1d13";
+  ctx.fillRect(centerX - radius, centerY - radius, radius * 2, radius * 2);
+  ctx.fillStyle = pulse === 0 ? "#f04a16" : "#ff7a18";
+  ctx.fillRect(
+    centerX - radius * 0.75,
+    centerY - radius * 0.75,
+    radius * 1.5,
+    radius * 1.5,
+  );
+  ctx.fillStyle = "#ffd447";
+  ctx.fillRect(
+    centerX - radius * 0.35,
+    centerY - radius * 0.35,
+    radius * 0.7,
+    radius * 0.7,
+  );
+
+  ctx.fillStyle = "#ff7a18";
+  if (projectile.speedY > 0) {
+    ctx.fillRect(
+      centerX - radius * 0.5,
+      projectile.y - radius * (pulse + 1),
+      radius,
+      radius,
+    );
+  } else if (projectile.speedY < 0) {
+    ctx.fillRect(
+      centerX - radius * 0.5,
+      projectile.y + projectile.height,
+      radius,
+      radius * (pulse + 1),
+    );
+  } else if (projectile.speedX > 0) {
+    ctx.fillRect(
+      projectile.x - radius * (pulse + 1),
+      centerY - radius * 0.5,
+      radius,
+      radius,
+    );
+  } else {
+    ctx.fillRect(
+      projectile.x + projectile.width,
+      centerY - radius * 0.5,
+      radius * (pulse + 1),
+      radius,
+    );
   }
 }
 
@@ -552,7 +630,7 @@ function drawCannons() {
         cannons[i].x,
         cannons[i].y,
         cannons[i].projectileWidth,
-        cannons[i].projectileHeight
+        cannons[i].projectileHeight,
       );
     } else {
       cannons[i].projectileCountdown = cannons[i].projectileCountdown + 1;
@@ -593,7 +671,7 @@ function drawCollectables() {
         collectables[i].x,
         collectables[i].y,
         collectableWidth,
-        collectableHeight
+        collectableHeight,
       );
     } else {
       //draw the icons at the top if collected
@@ -606,7 +684,7 @@ function drawCollectables() {
         200 + 100 * i,
         10,
         collectableWidth,
-        collectableHeight
+        collectableHeight,
       );
       ctx.globalAlpha = 1;
     }
@@ -679,7 +757,7 @@ function winGame() {
     canvas.width / 4,
     canvas.height / 6,
     canvas.width / 2,
-    canvas.height / 2
+    canvas.height / 2,
   );
   ctx.fillStyle = "white";
   ctx.font = "800% serif";
@@ -687,14 +765,14 @@ function winGame() {
     "You Win!",
     canvas.width / 4,
     canvas.height / 6 + canvas.height / 5,
-    (canvas.width / 16) * 14
+    (canvas.width / 16) * 14,
   );
   ctx.font = "500% serif";
   ctx.fillText(
     "Hit any key to restart",
     canvas.width / 4,
     canvas.height / 6 + canvas.height / 3,
-    (canvas.width / 16) * 14
+    (canvas.width / 16) * 14,
   );
   if (keyPress.any) {
     keyPress.any = false;
@@ -713,7 +791,7 @@ function createPlatform(
   speedX = 1,
   minY = null,
   maxY = null,
-  speedY = 1
+  speedY = 1,
 ) {
   platforms.push({
     x,
@@ -760,7 +838,7 @@ function createCannon(
   height = defaultProjectileHeight,
   minPos = null,
   maxPos = null,
-  speed = 1
+  speed = 1,
 ) {
   if (wallLocation === "top") {
     cannons.push({
@@ -841,7 +919,7 @@ function createCollectable(
   bounce = 1,
   minX = null,
   maxX = null,
-  speed = 1
+  speed = 1,
 ) {
   if (type !== "") {
     var image = document.createElement("img");
